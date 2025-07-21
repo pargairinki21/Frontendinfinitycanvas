@@ -600,6 +600,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ChatPanel from '../chat/ChatPanel';
 import ToolNode  from './ToolNode';
+import ToolBoard from './ToolBoard';
 import {
   FaWpforms,
   FaRegSquare,
@@ -762,10 +763,9 @@ export default function CanvasContainer() {
     <div
       className="w-screen h-screen overflow-hidden relative select-none"
       onMouseDown={onMouseDown}
-      style={{ cursor: isPanMode ? (dragging ? 'grabbing' : 'grab') : 'default' }}
+      style={{ cursor: isPanMode ? (dragging ? 'grabbing' : 'grab') : 'default', background: '#F8F9FB' }}
     >
-      {/* 71oQvWsKK background image */}
-      <div className="absolute inset-0 w-full h-full bg-cover bg-center -z-20" style={{ backgroundImage: "url('/backgroundimage/71oQvWsKKiL._UF894,1000_QL80_.jpg')" }}></div>
+      {/* Removed background image */}
       {/* TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="relative w-full flex items-center gap-3 h-[36px] px-8
@@ -830,7 +830,7 @@ export default function CanvasContainer() {
               className="w-16 h-8 bg-white rounded-t-full border-2 border-purple-400 flex items-center justify-center text-purple-700 shadow shadow-black/40"
               style={{ outline: 'none', border: 'none' }}
             >
-              {/* Home button no icon */}
+              {/* Home button, no icon */}
             </motion.button>
           </div>
           {/* Ask Something box */}
@@ -964,21 +964,13 @@ export default function CanvasContainer() {
         className="absolute left-1/2 top-1/2"
         style={{ transform:`translate(-50%,-50%) translate(${pos.x}px,${pos.y}px) scale(${scale})`, pointerEvents: isPanMode ? 'auto' : 'auto' }}
       >
-        <div ref={chatRef}>
-          <ChatPanel
-            hideInput
-            shadowColor={shadowColor}
-            droppedMessage={dropMsg}
-            droppedMessages={dropMsgs}
-            selectedTool={selectedTool}
-            messages={chatMessages}
-            typing={chatTyping}
-          />
+        {/* ToolBoard is now positioned to the top left and away from the ChatPanel */}
+        <div style={{ position: 'absolute', left: -900, top: -200 }}>
+          <ToolBoard />
         </div>
 
-        {/* @ts-ignore */}
+        {/* Tool nodes */}
         {nodes.map(node => (
-          // @ts-ignore
           <ToolNode
             key={node.id}
             id={node.id}
@@ -995,6 +987,21 @@ export default function CanvasContainer() {
             }}
           />
         ))}
+      </div>
+
+      {/* ChatPanel is now fixed and centered in the viewport */}
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+        <div className="pointer-events-auto">
+          <ChatPanel
+            hideInput
+            shadowColor={shadowColor}
+            droppedMessage={dropMsg}
+            droppedMessages={dropMsgs}
+            selectedTool={selectedTool}
+            messages={chatMessages}
+            typing={chatTyping}
+          />
+        </div>
       </div>
     </div>
   );
