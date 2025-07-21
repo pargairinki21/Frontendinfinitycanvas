@@ -1,113 +1,135 @@
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ChatPanel() {
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' },
+type ChatMessage = { id:number; sender:'user'|'assistant'; text:string };
+
+type ChatPanelProps = {
+  shadowColor?: string|null;
+  droppedMessage?: string;
+  droppedMessages?: ChatMessage[];
+  hideInput?: boolean;
+  selectedTool?: { label:string; icon:React.ElementType; color:string }|null;
+  messages?: ChatMessage[];
+  typing?: boolean;
+};
+
+export default function ChatPanel({
+  shadowColor,
+  droppedMessage,
+  droppedMessages,
+  hideInput,
+  selectedTool,
+  messages: messagesProp,
+  typing: typingProp,
+}: ChatPanelProps) {
+  const [messages,setMessages]=useState<ChatMessage[]>([
+    { id:1, sender:'assistant', text:'Hi there! How can I help you today?' },
   ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [input,setInput]=useState('');
+  const [typing,setTyping]=useState(false);
+  const scrollRef=useRef<HTMLDivElement>(null);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const newMessage = { id: Date.now(), sender: 'user', text: input };
-    setMessages((prev) => [...prev, newMessage]);
-    setInput('');
-    setIsTyping(true);
+  // Use props if provided
+  const displayMessages = messagesProp !== undefined ? messagesProp : messages;
+  const displayTyping = typingProp !== undefined ? typingProp : typing;
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, sender: 'assistant', text: 'That sounds interesting. Tell me more.' },
-      ]);
-      setIsTyping(false);
-    }, 1500);
-  };
+  /* auto‑scroll */
+  useEffect(()=>{ scrollRef.current?.scrollTo({top:scrollRef.current.scrollHeight,behavior:'smooth'}); },[displayMessages,displayTyping]);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
+  /* send */
+  function send(){
+    if(!input.trim()) return;
+    setMessages(m=>[...m,{id:Date.now(),sender:'user',text:input}]);
+    setInput(''); setTyping(true);
+    setTimeout(()=>{ setMessages(m=>[...m,{id:Date.now()+1,sender:'assistant',text:'That sounds interesting. Tell me more.'}]); setTyping(false); },1500);
+  }
+
+  /* helper to render list */
+  const render=(list:ChatMessage[])=>(
+    <AnimatePresence initial={false}>
+      {list.map(m=>(
+        <motion.div key={m.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10}} transition={{duration:0.3}}
+          className={`max-w-[80%] px-4 py-2 rounded-xl whitespace-pre-wrap ${
+            m.sender==='user' ? 'bg-[#d1f0e4] self-end ml-auto' : 'bg-[#f3f3f3] self-start mr-auto'
+          }`}>
+          {m.text}
+        </motion.div>
+      ))}
+      {displayTyping&&(
+        <motion.div key="typing" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+          className="max-w-[80%] px-4 py-2 rounded-xl bg-[#f3f3f3] self-start mr-auto">
+          <div className="flex gap-1">
+            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce"/>
+            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-150"/>
+            <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-300"/>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <div className="w-[600px] h-[80vh] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden">
-      <div className="p-4 border-b text-center font-semibold text-lg bg-[#f9f4f4]">
-        Welcome to Your AI Space
+    <div
+      className={"glass-card w-[800px] h-[50vh] flex flex-col overflow-hidden relative"}
+      style={{
+        boxShadow: shadowColor ? `0 8px 32px 0 ${shadowColor}99` : 'none'
+      }}
+    >
+      {/* Sine-wave shine effect overlay */}
+      <div className="pointer-events-none absolute left-0 top-0 w-full h-1/3 z-10">
+        <svg width="100%" height="100%" viewBox="0 0 800 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,60 Q200,0 400,60 T800,60 V180 H0 Z" fill="url(#shineGradient)"/>
+          <defs>
+            <linearGradient id="shineGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="white" stopOpacity="0.32"/>
+              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
+      {/* Messages area */}
+      {droppedMessages ? (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">{render(droppedMessages)}</div>
+      ) : droppedMessage ? (
+        <div className="flex-1 flex items-center justify-center text-xl font-semibold text-purple-700 bg-purple-50">
+          {droppedMessage}
+        </div>
+      ) : (
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          {render(displayMessages)}
+        </div>
+      )}
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        <AnimatePresence initial={false}>
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className={`max-w-[80%] px-4 py-2 rounded-xl whitespace-pre-wrap ${
-                msg.sender === 'user'
-                  ? 'bg-[#d1f0e4] self-end ml-auto'
-                  : 'bg-[#f3f3f3] self-start mr-auto'
-              }`}
-            >
-              {msg.text}
-            </motion.div>
-          ))}
-          {isTyping && (
-            <motion.div
-              key="typing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-[80%] px-4 py-2 rounded-xl bg-[#f3f3f3] self-start mr-auto"
-            >
-              <div className="flex items-center gap-1">
-                <div className="typing-dots w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" />
-                <div className="typing-dots w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-150" />
-                <div className="typing-dots w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-300" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="border-t p-4 bg-white flex gap-2">
-        <textarea
-          className="flex-1 resize-none rounded-xl p-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 max-h-24"
-          rows={1}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Type your message..."
-        />
-        <button
-          onClick={sendMessage}
-          className="shrink-0 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700"
-        >
-          Send
-        </button>
-      </div>
-
-      <style jsx>{`
-        .typing-dots {
-          display: inline-block;
-          animation-duration: 1s;
-          animation-iteration-count: infinite;
-        }
-        .delay-150 {
-          animation-delay: 0.15s;
-        }
-        .delay-300 {
-          animation-delay: 0.3s;
-        }
-      `}</style>
+      {/* Input bar (optional) */}
+      {!hideInput && (
+        <form className="border-t p-4 bg-white/60 backdrop-blur flex items-center gap-2"
+              onSubmit={e=>{e.preventDefault();send();}}>
+          <div className="flex items-center bg-white/80 border border-gray-200 rounded-full px-2 py-1 shadow w-[250px]">
+            <input
+              type="text"
+              className="flex-1 bg-transparent outline-none px-2 py-1"
+              placeholder="Type your message…"
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter' && !e.shiftKey){e.preventDefault();send();} }}
+            />
+            <button type="submit" className="ml-1 bg-purple-600 hover:bg-purple-700 text-white rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21l16.5-9-16.5-9v7.5l11.25 1.5-11.25 1.5V21z"/>
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 flex justify-end">
+            {selectedTool && (
+              <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-gray-300 shadow">
+                <selectedTool.icon color={selectedTool.color}/>
+                <span className="text-sm text-gray-700">{selectedTool.label}</span>
+              </span>
+            )}
+          </div>
+        </form>
+      )}
     </div>
   );
 }

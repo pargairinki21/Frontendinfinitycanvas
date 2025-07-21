@@ -12,7 +12,8 @@
     "framer-motion": "^12.19.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-simple-keyboard": "^3.8.95"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.0",
