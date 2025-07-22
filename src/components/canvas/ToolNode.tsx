@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 type ToolNodeProps = {
   id: number;
@@ -9,9 +9,10 @@ type ToolNodeProps = {
   onDrag: (id: number, x: number, y: number) => void;
   setDraggedTool: (tool: { id: number; color: string } | null) => void;
   isDragging: boolean;
+  onClick?: () => void;
 };
 
-export default function ToolNode({ id, x, y, label, color, onDrag, setDraggedTool, isDragging }: ToolNodeProps) {
+export default function ToolNode({ id, x, y, label, color, onDrag, setDraggedTool, isDragging, onClick }: ToolNodeProps) {
   const nodeRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -54,6 +55,7 @@ export default function ToolNode({ id, x, y, label, color, onDrag, setDraggedToo
       className="absolute data-[draggable=true]:cursor-move"
       data-draggable="true"
       onMouseDown={handleMouseDown}
+      onClick={onClick}
     >
       <div
         className="bg-white rounded-xl p-4 min-w-[150px] text-sm hover:shadow-xl transition-shadow duration-200"

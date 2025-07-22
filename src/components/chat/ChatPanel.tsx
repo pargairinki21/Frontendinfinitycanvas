@@ -71,23 +71,12 @@ export default function ChatPanel({
 
   return (
     <div
-      className={"glass-card w-[520px] h-[520px] flex flex-col overflow-hidden relative"}
+      className={"glass-card w-[340px] h-[340px] flex flex-col overflow-hidden relative"}
       style={{
         boxShadow: shadowColor ? `0 8px 32px 0 ${shadowColor}99` : 'none'
       }}
     >
-      {/* Sine-wave shine effect overlay */}
-      <div className="pointer-events-none absolute left-0 top-0 w-full h-1/3 z-10">
-        <svg width="100%" height="100%" viewBox="0 0 520 173" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,58 Q130,0 260,58 T520,58 V173 H0 Z" fill="url(#shineGradient)"/>
-          <defs>
-            <linearGradient id="shineGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="white" stopOpacity="0.32"/>
-              <stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+      {/* Removed sine-wave shine effect overlay */}
       {/* Messages area */}
       {droppedMessages ? (
         <div className="flex-1 overflow-y-auto p-5 space-y-4 text-base">{render(droppedMessages)}</div>

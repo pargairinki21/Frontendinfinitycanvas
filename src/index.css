@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 .glass-card {
+  width: 340px;
+  height: 340px;
   background: rgba(255, 255, 255, 0.22);
   backdrop-filter: blur(19px);
   -webkit-backdrop-filter: blur(19px);

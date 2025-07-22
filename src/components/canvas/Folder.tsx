@@ -1,5 +1,5 @@
 // src/components/canvas/Folder.tsx
-import { useState } from 'react';
+import React from 'react';
 import ToolNode from './ToolNode';
 
 type Tool = {
@@ -17,10 +17,11 @@ type FolderProps = {
   y: number;
   tools: Tool[];
   onDragTool: (toolId: number, x: number, y: number) => void;
+  onToolClick: (tool: Tool) => void;
 };
 
-export default function Folder({ id, name, x, y, tools, onDragTool }: FolderProps) {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Folder({ id, name, x, y, tools = [], onDragTool, onToolClick }: FolderProps) {
+  const [collapsed, setCollapsed] = React.useState(false);
 
   return (
     <div
@@ -41,6 +42,7 @@ export default function Folder({ id, name, x, y, tools, onDragTool }: FolderProp
               isDragging={false}
               onDrag={onDragTool}
               setDraggedTool={() => {}}
+              onClick={() => onToolClick(tool)}
             />
           ))}
         </div>
