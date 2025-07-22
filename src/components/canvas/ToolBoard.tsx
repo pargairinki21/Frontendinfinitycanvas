@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaWpforms, FaRegSquare, FaMapMarkerAlt, FaUniversity, FaIdCard, FaUserCheck } from 'react-icons/fa';
 
@@ -11,7 +11,8 @@ const ALL_TOOLS = [
   { label: 'KYC Update', icon: FaUserCheck, color: '#f43f5e', description: 'Update your KYC documents.' },
 ];
 
-export default function ToolBoard({ onToolClick, notchTools = [] }) {
+export default function ToolBoard({ onToolClick, notchTools = [], flyingCardLabel }) {
+  const [hoveredLabel, setHoveredLabel] = useState(null);
   const visibleTools = ALL_TOOLS.filter(tool => !notchTools.some(nt => nt.label === tool.label));
 
   return (
@@ -26,27 +27,42 @@ export default function ToolBoard({ onToolClick, notchTools = [] }) {
               <motion.div
                 key={tool.label}
                 layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial="initial"
+                animate="initial"
                 exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
                 transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                className="w-full h-24 bg-white/90 rounded-xl shadow border border-gray-100 flex flex-col items-start p-2 gap-1 hover:shadow-xl transition-all cursor-pointer overflow-hidden"
-                onClick={(e) => {
+                className="w-full h-24 rounded-xl shadow border border-gray-100 flex flex-col items-start p-2 gap-1 transition-all cursor-pointer overflow-hidden"
+                variants={{
+                  initial: { backgroundColor: '#fff', scale: 1 },
+                  hover: { backgroundColor: tool.color + '11', scale: 1.05 },
+                }}
+                whileHover="hover"
+                whileTap={{ scale: 0.97 }}
+                onHoverStart={() => setHoveredLabel(tool.label)}
+                onHoverEnd={() => setHoveredLabel(null)}
+                onClick={e => {
                   if (onToolClick) {
                     const rect = e.currentTarget.getBoundingClientRect();
                     onToolClick(tool, rect);
                   }
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <div className="flex items-center gap-2 mb-1 w-full">
                   <tool.icon size={18} color={tool.color} />
                   <span className="font-semibold text-sm text-gray-700 truncate w-[100px]">{tool.label}</span>
                 </div>
                 <div className="text-gray-500 text-xs flex-1 w-full truncate">{tool.description}</div>
-                <div className="w-full h-1 bg-gray-100 rounded-full mt-auto">
-                  <div className="h-1 bg-gray-300 rounded-full" style={{ width: '60%' }}></div>
+                <div className="w-full h-1 bg-gray-100 rounded-full mt-auto overflow-hidden">
+                  <motion.div
+                    className="h-1 rounded-full"
+                    variants={{
+                      initial: { width: '0%', backgroundColor: tool.color + '55' },
+                      hover: { width: '100%', backgroundColor: tool.color },
+                    }}
+                    initial="initial"
+                    animate={hoveredLabel === tool.label ? 'hover' : 'initial'}
+                    transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+                  />
                 </div>
               </motion.div>
             ))}

@@ -1,12 +1,10 @@
 // src/components/canvas/Folder.tsx
 import React from 'react';
-import ToolNode from './ToolNode';
+
 
 type Tool = {
   id: number;
   label: string;
-  x: number;
-  y: number;
   color: string;
 };
 
@@ -16,37 +14,31 @@ type FolderProps = {
   x: number;
   y: number;
   tools: Tool[];
-  onDragTool: (toolId: number, x: number, y: number) => void;
   onToolClick: (tool: Tool) => void;
 };
 
-export default function Folder({ id, name, x, y, tools = [], onDragTool, onToolClick }: FolderProps) {
-  const [collapsed, setCollapsed] = React.useState(false);
-
+export default function Folder({ id, name, x, y, tools = [], onToolClick }: FolderProps) {
   return (
     <div
       className="absolute border rounded-xl bg-white shadow-md"
-      style={{ left: x, top: y, width: collapsed ? 200 : 300 }}
+      style={{ left: x, top: y, width: 320 }}
     >
-      <div className="p-2 border-b flex justify-between items-center cursor-pointer bg-gray-100 rounded-t-xl" onClick={() => setCollapsed(!collapsed)}>
-        <span className="font-semibold">{name}</span>
-        <button>{collapsed ? '+' : '-'}</button>
+      <div className="p-3 border-b bg-gray-100 rounded-t-xl">
+        <span className="font-semibold text-lg">{name}</span>
       </div>
-
-      {!collapsed && (
-        <div className="relative p-2 space-y-2">
-          {tools.map(tool => (
-            <ToolNode
-              key={tool.id}
-              {...tool}
-              isDragging={false}
-              onDrag={onDragTool}
-              setDraggedTool={() => {}}
-              onClick={() => onToolClick(tool)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="p-4 grid grid-cols-1 gap-3">
+        {tools.map(tool => (
+          <div
+            key={tool.id}
+            className="w-full h-20 rounded-xl shadow border border-gray-100 flex flex-col items-start p-3 gap-1 transition-all cursor-pointer bg-white hover:bg-gray-50"
+            style={{ borderLeft: `4px solid ${tool.color}` }}
+            onClick={() => onToolClick(tool)}
+          >
+            <span className="font-semibold text-gray-700 text-base">{tool.label}</span>
+            {/* You can add a description or icon here if needed */}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

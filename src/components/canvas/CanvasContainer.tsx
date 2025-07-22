@@ -17,7 +17,8 @@ import {
   FaUserCheck,
   FaRegHandPaper,
 } from 'react-icons/fa';
-import { motion, AnimatePresence, IconType } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { IconType } from 'react-icons';
 
 type Tool = {
   label: string;
@@ -42,6 +43,20 @@ export default function CanvasContainer() {
   const [pos,   setPos]   = useState({ x:0, y:0 });
   const [scale, setScale] = useState(1);
 
+  // Shared tools for all folders
+  const sharedTools = [
+    { id: 2, label: 'Passbook Entry', x: 0, y: 0, color: '#3b82f6' },
+    { id: 3, label: 'Change Address', x: 0, y: 0, color: '#f59e42' },
+    { id: 5, label: 'Aadhar Card Update', x: 0, y: 0, color: '#06b6d4' },
+    { id: 6, label: 'KYC Update', x: 0, y: 0, color: '#f43f5e' },
+  ];
+
+  const folders = [
+    { id: 'sop-section', name: 'SOP Section', x: 900, y: -200, tools: sharedTools },
+    { id: 'information-retrival', name: 'Information Retrival', x: -900, y: 300, tools: sharedTools },
+    { id: 'performance', name: 'Performance', x: 900, y: 300, tools: sharedTools },
+  ];
+
   // Chat state for Ask Something box
   const [askInput, setAskInput] = useState("");
   const [chatMessages, setChatMessages] = useState([
@@ -58,7 +73,8 @@ export default function CanvasContainer() {
   const [notchTools, setNotchTools] = useState<Tool[]>([]);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [flyingIcon, setFlyingIcon] = useState<{ tool: Tool, from: DOMRect } | null>(null);
-  const notchRef = useRef(null);
+  const [flyingCard, setFlyingCard] = useState<{ tool: Tool, from: DOMRect } | null>(null);
+  const notchRef = useRef<HTMLDivElement>(null);
 
   /* Tool content mapping */
   const TOOL_CONTENT = {
@@ -176,9 +192,16 @@ export default function CanvasContainer() {
 
       {/* TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="relative w-full flex items-center gap-3 h-[36px] px-8
-                        bg-[#cccccc] backdrop-blur
-                        rounded-b-[22px]">
+        <div
+          className="relative w-full flex items-center gap-3 h-[36px] px-8 rounded-b-[22px]"
+          style={{
+            background: 'rgba(255,255,255,0.22)',
+            backdropFilter: 'blur(19px)',
+            WebkitBackdropFilter: 'blur(19px)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+          }}
+        >
           {/* No notch inside the navbar */}
         </div>
       </div>
@@ -186,8 +209,15 @@ export default function CanvasContainer() {
       {/* Top notch now floats below the navbar */}
         <div
          ref={notchRef}
-         style={{width: Math.max(48, notchTools.length * 48)}}
-         className="fixed left-1/2 top-[36px] -translate-x-1/2 h-16 bg-[#cccccc] backdrop-blur rounded-b-full flex items-center justify-center z-40"
+         style={{
+           width: Math.max(48, notchTools.length * 48),
+           background: 'rgba(255,255,255,0.22)',
+           backdropFilter: 'blur(19px)',
+           WebkitBackdropFilter: 'blur(19px)',
+           border: '1px solid rgba(255,255,255,0.3)',
+           boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+         }}
+         className="fixed left-1/2 top-[36px] -translate-x-1/2 h-16 rounded-b-full flex items-center justify-center z-40"
        >
           <AnimatePresence>
             {notchTools.map(tool => (
@@ -211,7 +241,7 @@ export default function CanvasContainer() {
                             setNotchTools(prev => prev.filter(t => t.label !== tool.label));
                             if (notchTools.length > 1) {
                               const next = notchTools.find(t => t.label !== tool.label);
-                              setSelectedTool(next);
+                              setSelectedTool(next || null);
                               setChatMessages(next ? [{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[next.label] }] : [{ id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' }]);
                             } else {
                               setSelectedTool(null);
@@ -236,13 +266,19 @@ export default function CanvasContainer() {
                width: flyingIcon.from.width,
                height: flyingIcon.from.height,
              }}
-             animate={{
-               left: notchRef.current?.getBoundingClientRect().x + notchRef.current?.getBoundingClientRect().width / 2 - 16,
-               top: notchRef.current?.getBoundingClientRect().y + 16,
-               width: 32,
-               height: 32,
-               scale: 1,
-             }}
+             animate={(() => {
+               if (notchRef.current) {
+                 const rect = notchRef.current.getBoundingClientRect();
+                 return {
+                   left: rect.x + rect.width / 2 - 16,
+                   top: rect.y + 16,
+                   width: 32,
+                   height: 32,
+                   scale: 1,
+                 };
+               }
+               return {};
+             })()}
              transition={{
                duration: 0.6,
                ease: [0.4, 0, 0.2, 1] // Professional ease-in-out curve
@@ -261,11 +297,29 @@ export default function CanvasContainer() {
 
       {/* BOTTOM BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="relative w-full flex flex-col items-center justify-center gap-2
-                        px-8 bg-[#cccccc] backdrop-blur z-10
-                        rounded-t-[22px] pt-2 pb-3">
+        <div
+          className="relative w-full flex flex-col items-center justify-center gap-2 px-8 z-10 rounded-t-[22px] pt-2 pb-3"
+          style={{
+            background: 'rgba(255,255,255,0.22)',
+            backdropFilter: 'blur(19px)',
+            WebkitBackdropFilter: 'blur(19px)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+          }}
+        >
           {/* semicircular notch with home button inside */}
           <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-20 h-12 bg-[#cccccc] rounded-t-full shadow-lg flex items-center justify-center border-x-2 border-t-2 border-purple-200 z-0 overflow-hidden">
+            {/* Glass effect for bottom bar notch */}
+            <div
+              className="absolute inset-0 w-full h-full rounded-t-full pointer-events-none -z-10"
+              style={{
+                background: 'rgba(255,255,255,0.22)',
+                backdropFilter: 'blur(19px)',
+                WebkitBackdropFilter: 'blur(19px)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+              }}
+            />
             <motion.button
               whileHover={{ scale: 1.2, backgroundColor: '#ede9fe' }}
               whileTap={{ scale: 0.95, backgroundColor: '#c4b5fd' }}
@@ -407,15 +461,99 @@ export default function CanvasContainer() {
         {/* Only show ToolBoard (Catoids panel) */}
         <div style={{ position: 'absolute', left: -900, top: -200 }}>
            <ToolBoard
+             heading="Catoids"
              notchTools={notchTools}
              onToolClick={(tool, rect) => {
                if (notchTools.some(t => t.label === tool.label)) return;
-               setFlyingIcon({ tool, from: rect });
+               setFlyingCard({ tool, from: rect });
              }}
            />
         </div>
-        {/* Removed floating ToolNode components */}
+        {/* SOP Section */}
+        <div style={{ position: 'absolute', left: 900, top: -200 }}>
+           <ToolBoard
+             heading="SOP Section"
+             notchTools={notchTools}
+             onToolClick={(tool, rect) => {
+               if (notchTools.some(t => t.label === tool.label)) return;
+               setFlyingCard({ tool, from: rect });
+             }}
+           />
+        </div>
+        {/* Information Retrival */}
+        <div style={{ position: 'absolute', left: -900, top: 300 }}>
+           <ToolBoard
+             heading="Information Retrival"
+             notchTools={notchTools}
+             onToolClick={(tool, rect) => {
+               if (notchTools.some(t => t.label === tool.label)) return;
+               setFlyingCard({ tool, from: rect });
+             }}
+           />
+        </div>
+        {/* Performance */}
+        <div style={{ position: 'absolute', left: 900, top: 300 }}>
+           <ToolBoard
+             heading="Performance"
+             notchTools={notchTools}
+             onToolClick={(tool, rect) => {
+               if (notchTools.some(t => t.label === tool.label)) return;
+               setFlyingCard({ tool, from: rect });
+             }}
+           />
+        </div>
       </div>
+
+      {/* Flying Card Animation */}
+      <AnimatePresence>
+        {flyingCard && (
+          <motion.div
+            key="flying-card"
+            className="fixed z-50 rounded-xl shadow-lg bg-white flex flex-col items-start p-2 gap-1 border border-gray-100"
+            initial={{
+              left: flyingCard.from.x,
+              top: flyingCard.from.y,
+              width: flyingCard.from.width,
+              height: flyingCard.from.height,
+              opacity: 1,
+              scale: 1,
+            }}
+            animate={(() => {
+              if (notchRef.current) {
+                const rect = notchRef.current.getBoundingClientRect();
+                return {
+                  left: rect.x + rect.width / 2 - 16,
+                  top: rect.y + 16,
+                  width: 32 * 2.5,
+                  height: 32 * 1.5,
+                  opacity: 1,
+                  scale: 1,
+                };
+              }
+              return {};
+            })()}
+            transition={{
+              duration: 0.7,
+              ease: [0.4, 0, 0.2, 1]
+            }}
+            onAnimationComplete={() => {
+              setNotchTools(prev => prev.some(t => t.label === flyingCard.tool.label) ? prev : [...prev, flyingCard.tool]);
+              setSelectedTool(flyingCard.tool);
+              setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[flyingCard.tool.label] }]);
+              setFlyingCard(null);
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1 w-full">
+              <flyingCard.tool.icon size={18} color={flyingCard.tool.color} />
+              <span className="font-semibold text-sm text-gray-700 truncate w-[100px]">{flyingCard.tool.label}</span>
+            </div>
+            <div className="text-gray-500 text-xs flex-1 w-full truncate">{TOOL_CONTENT[flyingCard.tool.label]}</div>
+            <div className="w-full h-1 bg-gray-100 rounded-full mt-auto">
+              <div className="h-1 bg-gray-300 rounded-full" style={{ width: '60%' }}></div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ChatPanel is now fixed and centered in the viewport */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-8">
