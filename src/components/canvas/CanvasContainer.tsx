@@ -16,6 +16,7 @@ import {
   FaIdCard,
   FaUserCheck,
   FaRegHandPaper,
+  FaChevronDown, FaChevronUp, FaHome
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconType } from 'react-icons';
@@ -171,6 +172,35 @@ export default function CanvasContainer() {
   /* quick snap */
   const snap = (x:number,y:number) => setPos({ x, y });
 
+  // Add mode state
+  const [expandedMode, setExpandedMode] = useState(false);
+
+  // Excel-like placeholder for expanded mode
+  function FakeExcelSheet() {
+    return (
+      <div className="w-[520px] h-[340px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-auto transition-all duration-500 flex flex-col scrollbar-hide">
+        <div className="sticky top-0 z-10 bg-white font-semibold text-gray-700 text-sm flex">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="w-24 py-2 px-3 border border-gray-300 text-center first:rounded-tl-2xl last:rounded-tr-2xl">
+              {String.fromCharCode(65 + i)}
+            </div>
+          ))}
+        </div>
+        <div className="flex-1">
+          {Array.from({ length: 20 }, (_, row) => (
+            <div key={row} className="flex">
+              {Array.from({ length: 8 }, (_, col) => (
+                <div key={col} className="w-24 h-10 px-3 py-2 border border-gray-300 text-gray-800 text-xs flex items-center justify-center">
+                  {row + 1},{String.fromCharCode(65 + col)}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   /* ─── JSX ─── */
   return (
     <div
@@ -190,35 +220,19 @@ export default function CanvasContainer() {
       />
       <div className="absolute inset-0 bg-black/40 -z-10 pointer-events-none select-none" />
 
-      {/* TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <div
-          className="relative w-full flex items-center gap-3 h-[36px] px-8 rounded-b-[22px]"
-          style={{
-            background: 'rgba(255,255,255,0.22)',
-            backdropFilter: 'blur(19px)',
-            WebkitBackdropFilter: 'blur(19px)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
-          }}
-        >
-          {/* No notch inside the navbar */}
-        </div>
-      </div>
-      
-      {/* Top notch now floats below the navbar */}
-        <div
-         ref={notchRef}
-         style={{
-           width: Math.max(48, notchTools.length * 48),
-           background: 'rgba(255,255,255,0.22)',
-           backdropFilter: 'blur(19px)',
-           WebkitBackdropFilter: 'blur(19px)',
-           border: '1px solid rgba(255,255,255,0.3)',
-           boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
-         }}
-         className="fixed left-1/2 top-[36px] -translate-x-1/2 h-16 rounded-b-full flex items-center justify-center z-40"
-       >
+      {/* Notch now at the very top of the page */}
+      <div
+        ref={notchRef}
+        style={{
+          width: Math.max(48, notchTools.length * 48),
+          background: 'rgba(255,255,255,0.22)',
+          backdropFilter: 'blur(19px)',
+          WebkitBackdropFilter: 'blur(19px)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+        }}
+        className="fixed left-1/2 top-0 -translate-x-1/2 h-16 rounded-b-full flex items-center justify-center z-40"
+      >
           <AnimatePresence>
             {notchTools.map(tool => (
               <motion.span
@@ -300,37 +314,9 @@ export default function CanvasContainer() {
         <div
           className="relative w-full flex flex-col items-center justify-center gap-2 px-8 z-10 rounded-t-[22px] pt-2 pb-3"
           style={{
-            background: 'rgba(255,255,255,0.22)',
-            backdropFilter: 'blur(19px)',
-            WebkitBackdropFilter: 'blur(19px)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
+            // All background, border, and boxShadow removed for full transparency
           }}
         >
-          {/* semicircular notch with home button inside */}
-          <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-20 h-12 bg-[#cccccc] rounded-t-full shadow-lg flex items-center justify-center border-x-2 border-t-2 border-purple-200 z-0 overflow-hidden">
-            {/* Glass effect for bottom bar notch */}
-            <div
-              className="absolute inset-0 w-full h-full rounded-t-full pointer-events-none -z-10"
-              style={{
-                background: 'rgba(255,255,255,0.22)',
-                backdropFilter: 'blur(19px)',
-                WebkitBackdropFilter: 'blur(19px)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1), inset 0 0 52px 26px rgba(255,255,255,0.26)'
-              }}
-            />
-            <motion.button
-              whileHover={{ scale: 1.2, backgroundColor: '#ede9fe' }}
-              whileTap={{ scale: 0.95, backgroundColor: '#c4b5fd' }}
-              transition={{ type: 'spring', stiffness: 300 }}
-              onClick={() => snap(0,0)}
-              className="w-16 h-8 bg-white rounded-t-full border-2 border-purple-400 flex items-center justify-center text-purple-700 shadow shadow-black/40"
-              style={{ outline: 'none', border: 'none' }}
-            >
-              {/* Home button, no icon */}
-            </motion.button>
-          </div>
           {/* Ask Something box */}
           <form className="flex justify-start ml-0" onSubmit={e => {
             e.preventDefault();
@@ -375,6 +361,8 @@ export default function CanvasContainer() {
               onChange={e => setAskInput(e.target.value)}
             />
           </form>
+          {/* Add vertical gap below input */}
+          <div className="mt-3" />
           {/* Directional and undo buttons */}
           <div className="flex items-center justify-end gap-3 ml-4">
             <motion.button
@@ -396,6 +384,18 @@ export default function CanvasContainer() {
               style={{ outline: 'none', border: 'none' }}
             >
               <FaArrowUp style={{transform:'rotate(90deg)'}}/>
+            </motion.button>
+            {/* Home icon button (moved between up and right arrows) */}
+            <motion.button
+              whileHover={{ scale: 1.2, backgroundColor: '#ede9fe' }}
+              whileTap={{ scale: 0.95, backgroundColor: '#c4b5fd' }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              onClick={() => snap(0,0)}
+              className="w-8 h-8 bg-white rounded-full border-2 border-white flex items-center justify-center text-purple-400 shadow !opacity-100"
+              style={{ outline: 'none', border: 'none' }}
+              title="Home"
+            >
+              <FaHome />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.2, backgroundColor: '#ede9fe' }}
@@ -448,6 +448,18 @@ export default function CanvasContainer() {
               title="Pan Mode"
             >
               <FaRegHandPaper/>
+            </motion.button>
+            {/* Collapse/Expand Chat icon button */}
+            <motion.button
+              whileHover={{ scale: 1.2, backgroundColor: '#ede9fe' }}
+              whileTap={{ scale: 0.95, backgroundColor: '#c4b5fd' }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              onClick={() => setExpandedMode((v) => !v)}
+              className="w-8 h-8 bg-white rounded-full border-2 border-white flex items-center justify-center text-purple-400 shadow !opacity-100 ml-2"
+              style={{ outline: 'none', border: 'none' }}
+              title={expandedMode ? 'Collapse Chat' : 'Expand Chat'}
+            >
+              {expandedMode ? <FaChevronDown /> : <FaChevronUp />}
             </motion.button>
           </div>
         </div>
@@ -555,20 +567,46 @@ export default function CanvasContainer() {
         )}
       </AnimatePresence>
 
-      {/* ChatPanel is now fixed and centered in the viewport */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-8">
-        <div className="pointer-events-auto">
-          <ChatPanel
-            hideInput
-            shadowColor={shadowColor}
-            droppedMessage={dropMsg}
-            droppedMessages={dropMsgs}
-            selectedTool={selectedTool}
-            messages={chatMessages}
-            typing={chatTyping}
-          />
+      {/* Chat/Excel layout */}
+      {expandedMode ? (
+        <div className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none transition-all duration-500">
+          <div className="pointer-events-auto flex items-center justify-center">
+            <div className="flex flex-row gap-8 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-md shadow-xl border border-white/30 p-1.5"
+                 style={{
+                   // Remove explicit width/height, let content + padding define size
+                 }}>
+              <div className="flex-shrink-0 h-[340px] w-[520px] flex items-center justify-center">
+                <FakeExcelSheet />
+              </div>
+              <div className="flex-shrink-0 h-[340px] w-[340px] flex items-center justify-center">
+                <ChatPanel
+                  shadowColor={shadowColor}
+                  droppedMessage={dropMsg}
+                  droppedMessages={dropMsgs}
+                  hideInput={false} // Changed to false for expanded mode
+                  selectedTool={selectedTool}
+                  messages={chatMessages}
+                  typing={chatTyping}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-8 transition-all duration-500">
+          <div className="pointer-events-auto">
+            <ChatPanel
+              hideInput={false} // Changed to false for expanded mode
+              shadowColor={shadowColor}
+              droppedMessage={dropMsg}
+              droppedMessages={dropMsgs}
+              selectedTool={selectedTool}
+              messages={chatMessages}
+              typing={chatTyping}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

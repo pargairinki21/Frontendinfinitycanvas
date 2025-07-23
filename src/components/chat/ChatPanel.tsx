@@ -85,39 +85,12 @@ export default function ChatPanel({
           {droppedMessage}
         </div>
       ) : (
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 text-base">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 text-base scrollbar-hide">
           {render(displayMessages)}
         </div>
       )}
 
       {/* Input bar (optional) */}
-      {!hideInput && (
-        <form className="border-t p-4 bg-white/60 backdrop-blur flex items-center gap-3"
-              onSubmit={e=>{e.preventDefault();send();}}>
-          <div className="flex items-center bg-white/80 border border-gray-200 rounded-full px-3 py-2 shadow w-[260px]">
-            <input
-              type="text"
-              className="flex-1 bg-transparent outline-none px-2 py-1 text-base"
-              placeholder="Type…"
-              value={input}
-              onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{ if(e.key==='Enter' && !e.shiftKey){e.preventDefault();send();} }}
-            />
-            <button type="submit" className="ml-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full p-2">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21l16.5-9-16.5-9v7.5l11.25 1.5-11.25 1.5V21z"/>
-              </svg>
-            </button>
-          </div>
-          <div className="flex-1 flex justify-end">
-            {selectedTool && (
-              <span className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-gray-300 shadow text-base">
-                <selectedTool.icon color={selectedTool.color} size={22}/>
-              </span>
-            )}
-          </div>
-        </form>
-      )}
     </div>
   );
 }
