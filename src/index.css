@@ -11,6 +11,15 @@
   display: none; /* Chrome/Safari/Webkit */
 }
 
+/* Hide scrollbars for react-data-grid and its container */
+.rdg, .rdg * {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE 10+ */
+}
+.rdg::-webkit-scrollbar, .rdg *::-webkit-scrollbar {
+  display: none !important; /* Chrome/Safari/Webkit */
+}
+
 .glass-card {
   width: 340px;
   height: 340px;

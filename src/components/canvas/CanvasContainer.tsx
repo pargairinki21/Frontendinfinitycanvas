@@ -20,6 +20,8 @@ import {
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconType } from 'react-icons';
+import ReactDataGrid from 'react-data-grid';
+import saveAs from 'file-saver';
 
 type Tool = {
   label: string;
@@ -44,19 +46,93 @@ export default function CanvasContainer() {
   const [pos,   setPos]   = useState({ x:0, y:0 });
   const [scale, setScale] = useState(1);
 
-  // Shared tools for all folders
-  const sharedTools = [
-    { id: 2, label: 'Passbook Entry', x: 0, y: 0, color: '#3b82f6' },
-    { id: 3, label: 'Change Address', x: 0, y: 0, color: '#f59e42' },
-    { id: 5, label: 'Aadhar Card Update', x: 0, y: 0, color: '#06b6d4' },
-    { id: 6, label: 'KYC Update', x: 0, y: 0, color: '#f43f5e' },
-  ];
+  // Define unique tools for each folder
+  const TOOLS_FOR_FOLDERS = {
+    tools: [
+      { label: 'Form Finder', icon: FaWpforms, color: '#22c55e' },
+      { label: 'Change Address', icon: FaMapMarkerAlt, color: '#f59e42' },
+      { label: 'ATM Pin Change', icon: FaUniversity, color: '#a855f7' },
+      { label: 'Aadhar Card Update', icon: FaIdCard, color: '#06b6d4' },
+      { label: 'KYC Update', icon: FaUserCheck, color: '#f43f5e' },
+      { label: 'Passbook Entry', icon: FaRegSquare, color: '#3b82f6' },
+    ],
+    'information-retrieval': [
+      { label: 'Document Search', icon: FaWpforms, color: '#0ea5e9' },
+      { label: 'FAQ Finder', icon: FaRegSquare, color: '#fbbf24' },
+      { label: 'Knowledge Base', icon: FaMapMarkerAlt, color: '#a3e635' },
+      { label: 'Data Extractor', icon: FaUniversity, color: '#f472b6' },
+      { label: 'Smart Query', icon: FaIdCard, color: '#818cf8' },
+      { label: 'Insight Generator', icon: FaUserCheck, color: '#f87171' },
+    ],
+    sop: [
+      { label: 'SOP Builder', icon: FaWpforms, color: '#f59e42' },
+      { label: 'Step Tracker', icon: FaRegSquare, color: '#22d3ee' },
+      { label: 'Compliance Check', icon: FaMapMarkerAlt, color: '#a3e635' },
+      { label: 'Approval Flow', icon: FaUniversity, color: '#f43f5e' },
+      { label: 'Template Manager', icon: FaIdCard, color: '#fbbf24' },
+      { label: 'Audit Log', icon: FaUserCheck, color: '#a855f7' },
+    ],
+    performance: [
+      { label: 'KPI Dashboard', icon: FaWpforms, color: '#f43f5e' },
+      { label: 'Scorecard', icon: FaRegSquare, color: '#22c55e' },
+      { label: 'Benchmarking', icon: FaMapMarkerAlt, color: '#3b82f6' },
+      { label: 'Trend Analyzer', icon: FaUniversity, color: '#f59e42' },
+      { label: 'Goal Setter', icon: FaIdCard, color: '#06b6d4' },
+      { label: 'Performance Review', icon: FaUserCheck, color: '#fbbf24' },
+    ],
+  };
 
-  const folders = [
-    { id: 'sop-section', name: 'SOP Section', x: 900, y: -200, tools: sharedTools },
-    { id: 'information-retrival', name: 'Information Retrival', x: -900, y: 300, tools: sharedTools },
-    { id: 'performance', name: 'Performance', x: 900, y: 300, tools: sharedTools },
+  // Per-folder card state
+  const [folderCards, setFolderCards] = useState(() => ({
+    tools: [...TOOLS_FOR_FOLDERS.tools],
+    'information-retrieval': [...TOOLS_FOR_FOLDERS['information-retrieval']],
+    sop: [...TOOLS_FOR_FOLDERS.sop],
+    performance: [...TOOLS_FOR_FOLDERS.performance],
+  }));
+
+  // Define initial folder positions and names
+  const initialFolders = [
+    { id: 'tools', name: 'Tools', x: -900, y: -200 },
+    { id: 'information-retrieval', name: 'Information Retrieval', x: -900, y: 300 },
+    { id: 'sop', name: 'SOP', x: 900, y: -200 },
+    { id: 'performance', name: 'Performance', x: 900, y: 300 },
   ];
+  const [folders, setFolders] = useState(initialFolders);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  function handleFolderPointerDown(e: React.PointerEvent, folderId: string) {
+    if (selectedFolderId === folderId) {
+      setDraggingId(folderId);
+      const folder = folders.find(f => f.id === folderId);
+      if (folder) {
+        setDragOffset({ x: e.clientX - folder.x, y: e.clientY - folder.y });
+      }
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } else {
+      setSelectedFolderId(folderId);
+    }
+    e.stopPropagation();
+  }
+
+  function handleFolderPointerMove(e: React.PointerEvent, folderId: string) {
+    if (draggingId === folderId && dragOffset) {
+      setFolders(prev => prev.map(f =>
+        f.id === folderId
+          ? { ...f, x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y }
+          : f
+      ));
+    }
+  }
+
+  function handleFolderPointerUp(e: React.PointerEvent, folderId: string) {
+    if (draggingId === folderId) {
+      setDraggingId(null);
+      setDragOffset(null);
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    }
+  }
 
   // Chat state for Ask Something box
   const [askInput, setAskInput] = useState("");
@@ -71,11 +147,15 @@ export default function CanvasContainer() {
   const lastLabelRef            = useRef<string>('');
 
   /* chips for top notch */
-  const [notchTools, setNotchTools] = useState<Tool[]>([]);
+  // Update notchTools to store fromFolder
+  const [notchTools, setNotchTools] = useState<{ tool: Tool, fromFolder: string }[]>([]);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [flyingIcon, setFlyingIcon] = useState<{ tool: Tool, from: DOMRect } | null>(null);
   const [flyingCard, setFlyingCard] = useState<{ tool: Tool, from: DOMRect } | null>(null);
   const notchRef = useRef<HTMLDivElement>(null);
+
+  // Add drag state for card-to-notch
+  const [draggedCard, setDraggedCard] = useState<{ tool: Tool, fromFolder: string } | null>(null);
 
   /* Tool content mapping */
   const TOOL_CONTENT = {
@@ -153,7 +233,7 @@ export default function CanvasContainer() {
       { label: 'KYC Update', icon: FaUserCheck, color: '#f43f5e' },
     ].find(t => t.label === label);
     if (toolInfo) {
-      setNotchTools(prev => prev.some(t => t.label === label) ? prev : [...prev, toolInfo]);
+      setNotchTools(prev => prev.some(t => t.tool.label === label) ? prev : [...prev, { tool: toolInfo, fromFolder: selectedFolderId || 'tools' }]);
       setSelectedTool(toolInfo);
       setChatMessages([{ id: Date.now(), sender: 'assistant', text: '...' }]);
       setChatTyping(true);
@@ -167,7 +247,7 @@ export default function CanvasContainer() {
     setNodes(n => n.filter(node => node.label !== label));
     setDropMsg('');
     setDropMsgs(null);
-  }, [dragTool, shadowColor]);
+  }, [dragTool, shadowColor, selectedFolderId]);
 
   /* quick snap */
   const snap = (x:number,y:number) => setPos({ x, y });
@@ -177,29 +257,111 @@ export default function CanvasContainer() {
 
   // Excel-like placeholder for expanded mode
   function FakeExcelSheet() {
+    // Define columns (A-H)
+    const columns = Array.from({ length: 8 }, (_, i) => ({
+      key: String.fromCharCode(65 + i),
+      name: String.fromCharCode(65 + i),
+      resizable: true,
+      editable: true,
+      width: 60
+    }));
+    // Define rows (1-20)
+    const [rows, setRows] = React.useState(
+      Array.from({ length: 20 }, (_, rowIdx) => {
+        const row = {};
+        for (let col = 0; col < 8; col++) {
+          row[String.fromCharCode(65 + col)] = '';
+        }
+        return row;
+      })
+    );
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // CSV Export/Import helpers
+    function exportToCSV() {
+      const csv = [columns.map(col => col.name).join(',')]
+        .concat(rows.map(row => columns.map(col => row[col.key] || '').join(',')))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      saveAs(blob, 'sheet.csv');
+    }
+    function importFromCSV(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const text = evt.target.result;
+        if (typeof text !== 'string') return;
+        const lines = text.split(/\r?\n/);
+        const newRows = lines.slice(1).map(line => {
+          const values = line.split(',');
+          const row = {};
+          columns.forEach((col, i) => { row[col.key] = values[i] || ''; });
+          return row;
+        });
+        setRows(newRows);
+      };
+      reader.readAsText(file);
+    }
+    // Context menu for row/column add/delete
+    const [contextMenu, setContextMenu] = React.useState(null);
+    function handleContextMenu(e) {
+      e.preventDefault();
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    }
+    function addRow() {
+      setRows(r => [...r, Object.fromEntries(columns.map(col => [col.key, '']))]);
+      setContextMenu(null);
+    }
+    function deleteRow() {
+      setRows(r => r.slice(0, -1));
+      setContextMenu(null);
+    }
+
     return (
-      <div className="w-[520px] h-[340px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-auto transition-all duration-500 flex flex-col scrollbar-hide">
-        <div className="sticky top-0 z-10 bg-white font-semibold text-gray-700 text-sm flex">
-          {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="w-24 py-2 px-3 border border-gray-300 text-center first:rounded-tl-2xl last:rounded-tr-2xl">
-              {String.fromCharCode(65 + i)}
-            </div>
-          ))}
+      <div
+        ref={containerRef}
+        className="w-[520px] h-[340px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-auto transition-all duration-500 flex flex-col scrollbar-hide p-0.5 scrollbar-hide"
+        style={{ cursor: 'auto' }}
+        onContextMenu={handleContextMenu}
+      >
+        <div className="flex items-center gap-2 mb-1 px-2 pt-1">
+          <button className="text-xs px-2 py-1 bg-gray-100 rounded border border-gray-300 hover:bg-gray-200" onClick={exportToCSV}>Export CSV</button>
+          <label className="text-xs px-2 py-1 bg-gray-100 rounded border border-gray-300 hover:bg-gray-200 cursor-pointer">
+            Import CSV
+            <input type="file" accept=".csv" className="hidden" onChange={importFromCSV} />
+          </label>
+          <button className="text-xs px-2 py-1 bg-gray-100 rounded border border-gray-300 hover:bg-gray-200" onClick={addRow}>Add Row</button>
+          <button className="text-xs px-2 py-1 bg-gray-100 rounded border border-gray-300 hover:bg-gray-200" onClick={deleteRow}>Delete Row</button>
         </div>
-        <div className="flex-1">
-          {Array.from({ length: 20 }, (_, row) => (
-            <div key={row} className="flex">
-              {Array.from({ length: 8 }, (_, col) => (
-                <div key={col} className="w-24 h-10 px-3 py-2 border border-gray-300 text-gray-800 text-xs flex items-center justify-center">
-                  {row + 1},{String.fromCharCode(65 + col)}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+        {contextMenu && (
+          <div style={{ position: 'fixed', left: contextMenu.x, top: contextMenu.y, zIndex: 1000 }} className="bg-white border border-gray-300 rounded shadow p-2 text-xs">
+            <button className="block w-full text-left px-2 py-1 hover:bg-gray-100" onClick={addRow}>Add Row</button>
+            <button className="block w-full text-left px-2 py-1 hover:bg-gray-100" onClick={deleteRow}>Delete Row</button>
+            <button className="block w-full text-left px-2 py-1 hover:bg-gray-100" onClick={() => setContextMenu(null)}>Close</button>
+          </div>
+        )}
+        <ReactDataGrid
+          columns={columns.map(col => ({ ...col, editable: true }))}
+          rows={rows}
+          onRowsChange={setRows}
+          className="rdg-light"
+          style={{ height: 300, fontFamily: 'inherit', fontSize: 14 }}
+          enableCellSelect={true}
+          // Multi-cell selection, keyboard nav, copy/paste are built-in
+        />
       </div>
     );
   }
+
+  // Notch drop zone logic
+  const handleCardDropToNotch = (tool: Tool, fromFolder: string) => {
+    setNotchTools(prev => prev.some(t => t.tool.label === tool.label) ? prev : [...prev, { tool, fromFolder }]);
+    setFolderCards(prev => ({
+      ...prev,
+      [fromFolder]: prev[fromFolder].filter(t => t.label !== tool.label)
+    }));
+  };
 
   /* ─── JSX ─── */
   return (
@@ -234,37 +396,43 @@ export default function CanvasContainer() {
         className="fixed left-1/2 top-0 -translate-x-1/2 h-16 rounded-b-full flex items-center justify-center z-40"
       >
           <AnimatePresence>
-            {notchTools.map(tool => (
-              <motion.span
-                key={tool.label}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: selectedTool?.label === tool.label ? 1.15 : 1, boxShadow: selectedTool?.label === tool.label ? '0 0 0 4px #c4b5fd55' : 'none' }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 ${selectedTool?.label === tool.label ? 'border-purple-500 bg-white/90' : 'border-transparent bg-white/60'} cursor-pointer transition-all`}
-                onClick={() => {
-                  setSelectedTool(tool);
-                  setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[tool.label] }]);
-                }}
-              >
-                <tool.icon color={tool.color} size={20}/>
-                {selectedTool?.label === tool.label && (
-                  <button className="absolute -top-2 -right-2 w-5 h-5 bg-white rounded-full border border-gray-300 text-gray-500 hover:text-red-500 flex items-center justify-center text-xs"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setNotchTools(prev => prev.filter(t => t.label !== tool.label));
-                            if (notchTools.length > 1) {
-                              const next = notchTools.find(t => t.label !== tool.label);
-                              setSelectedTool(next || null);
-                              setChatMessages(next ? [{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[next.label] }] : [{ id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' }]);
-                            } else {
-                              setSelectedTool(null);
-                              setChatMessages([{ id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' }]);
-                            }
-                          }}>×</button>
-                )}
-              </motion.span>
-            ))}
+            {notchTools
+              .filter(nt => nt && nt.tool && nt.tool.label)
+              .map(({ tool, fromFolder }) => (
+                <motion.span
+                  key={tool.label}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: selectedTool?.label === tool.label ? 1.15 : 1, boxShadow: selectedTool?.label === tool.label ? '0 0 0 4px #c4b5fd55' : 'none' }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 ${selectedTool?.label === tool.label ? 'border-purple-500 bg-white/90' : 'border-transparent bg-white/60'} cursor-pointer transition-all`}
+                  onClick={() => {
+                    setSelectedTool(tool);
+                    setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[tool.label] }]);
+                  }}
+                >
+                  <tool.icon color={tool.color} size={20}/>
+                  {selectedTool?.label === tool.label && (
+                    <button className="absolute -top-2 -right-2 w-5 h-5 bg-white rounded-full border border-gray-300 text-gray-500 hover:text-red-500 flex items-center justify-center text-xs"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setNotchTools(prev => prev.filter(nt => nt && nt.tool && nt.tool.label !== tool.label));
+                              setFolderCards(prev => ({
+                                ...prev,
+                                [fromFolder]: [...(prev[fromFolder] || []), tool]
+                              }));
+                              if (notchTools.length > 1) {
+                                const next = notchTools.find(nt => nt && nt.tool && nt.tool.label !== tool.label);
+                                setSelectedTool(next?.tool || null);
+                                setChatMessages(next ? [{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[next.tool.label] }] : [{ id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' }]);
+                              } else {
+                                setSelectedTool(null);
+                                setChatMessages([{ id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' }]);
+                              }
+                            }}>×</button>
+                  )}
+                </motion.span>
+              ))}
           </AnimatePresence>
         </div>
 
@@ -298,7 +466,7 @@ export default function CanvasContainer() {
                ease: [0.4, 0, 0.2, 1] // Professional ease-in-out curve
              }}
              onAnimationComplete={() => {
-               setNotchTools(prev => prev.some(t => t.label === flyingIcon.tool.label) ? prev : [...prev, flyingIcon.tool]);
+               setNotchTools(prev => prev.some(t => t.tool.label === flyingIcon.tool.label) ? prev : [...prev, { tool: flyingIcon.tool, fromFolder: selectedFolderId || 'tools' }]);
                setSelectedTool(flyingIcon.tool);
                setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[flyingIcon.tool.label] }]);
                setFlyingIcon(null);
@@ -337,7 +505,7 @@ export default function CanvasContainer() {
                 { label: 'KYC Update', icon: FaUserCheck, color: '#f43f5e' },
               ].find(ti => ti.label === tool);
               if (toolInfo) {
-                setNotchTools(prev => prev.some(t => t.label === tool) ? prev : [...prev, toolInfo]);
+                setNotchTools(prev => prev.some(t => t.tool.label === tool) ? prev : [...prev, { tool: toolInfo, fromFolder: selectedFolderId || 'tools' }]);
                 setSelectedTool(toolInfo);
               }
             } else {
@@ -468,52 +636,45 @@ export default function CanvasContainer() {
       {/* PANNABLE LAYER */}
       <div
         className="absolute left-1/2 top-1/2"
-        style={{ transform:`translate(-50%,-50%) translate(${pos.x}px,${pos.y}px) scale(${scale})`, pointerEvents: isPanMode ? 'auto' : 'auto' }}
+        style={{ transform:`translate(-50%,-50%) scale(${scale})`, pointerEvents: isPanMode ? 'auto' : 'auto' }}
       >
-        {/* Only show ToolBoard (Catoids panel) */}
-        <div style={{ position: 'absolute', left: -900, top: -200 }}>
-           <ToolBoard
-             heading="Catoids"
-             notchTools={notchTools}
-             onToolClick={(tool, rect) => {
-               if (notchTools.some(t => t.label === tool.label)) return;
-               setFlyingCard({ tool, from: rect });
-             }}
-           />
-        </div>
-        {/* SOP Section */}
-        <div style={{ position: 'absolute', left: 900, top: -200 }}>
-           <ToolBoard
-             heading="SOP Section"
-             notchTools={notchTools}
-             onToolClick={(tool, rect) => {
-               if (notchTools.some(t => t.label === tool.label)) return;
-               setFlyingCard({ tool, from: rect });
-             }}
-           />
-        </div>
-        {/* Information Retrival */}
-        <div style={{ position: 'absolute', left: -900, top: 300 }}>
-           <ToolBoard
-             heading="Information Retrival"
-             notchTools={notchTools}
-             onToolClick={(tool, rect) => {
-               if (notchTools.some(t => t.label === tool.label)) return;
-               setFlyingCard({ tool, from: rect });
-             }}
-           />
-        </div>
-        {/* Performance */}
-        <div style={{ position: 'absolute', left: 900, top: 300 }}>
-           <ToolBoard
-             heading="Performance"
-             notchTools={notchTools}
-             onToolClick={(tool, rect) => {
-               if (notchTools.some(t => t.label === tool.label)) return;
-               setFlyingCard({ tool, from: rect });
-             }}
-           />
-        </div>
+        {folders.map(folder => {
+          const isSelected = selectedFolderId === folder.id;
+          const folderTools = folderCards[folder.id as keyof typeof folderCards];
+          return (
+            <div
+              key={folder.id}
+              style={{ position: 'absolute', left: folder.x, top: folder.y, zIndex: isSelected ? 50 : 10 }}
+              className={
+                (isSelected
+                  ? 'scale-105 shadow-2xl border-2 border-purple-400 ring-4 ring-purple-200/40 transition-transform duration-200 cursor-move '
+                  : 'transition-transform duration-200 cursor-pointer ') +
+                'rounded-2xl'
+              }
+              onPointerDown={e => handleFolderPointerDown(e, folder.id)}
+              onPointerMove={e => handleFolderPointerMove(e, folder.id)}
+              onPointerUp={e => handleFolderPointerUp(e, folder.id)}
+            >
+              <ToolBoard
+                heading={folder.name}
+                tools={folderTools}
+                flyingCardLabel={null}
+                onToolClick={(tool, rect) => {
+                  if (!notchTools.some(nt => nt.tool.label === tool.label)) {
+                    setNotchTools(prev => [...prev, { tool, fromFolder: folder.id }]);
+                    setFolderCards(prev => ({
+                      ...prev,
+                      [folder.id]: prev[folder.id].filter(t => t.label !== tool.label)
+                    }));
+                    setSelectedTool(tool);
+                    setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[tool.label] || tool.label }]);
+                  }
+                }}
+                onCardDrop={tool => handleCardDropToNotch(tool, folder.id)}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Flying Card Animation */}
@@ -549,7 +710,10 @@ export default function CanvasContainer() {
               ease: [0.4, 0, 0.2, 1]
             }}
             onAnimationComplete={() => {
-              setNotchTools(prev => prev.some(t => t.label === flyingCard.tool.label) ? prev : [...prev, flyingCard.tool]);
+              setFolderCards(prev => ({
+                ...prev,
+                [selectedFolderId as keyof typeof folderCards]: [...prev[selectedFolderId as keyof typeof folderCards].filter(t => t.label !== flyingCard.tool.label), flyingCard.tool]
+              }));
               setSelectedTool(flyingCard.tool);
               setChatMessages([{ id: Date.now(), sender: 'assistant', text: TOOL_CONTENT[flyingCard.tool.label] }]);
               setFlyingCard(null);
