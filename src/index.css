@@ -21,18 +21,9 @@
 }
 
 .glass-card {
-  width: 340px;
-  height: 340px;
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(19px);
-  -webkit-backdrop-filter: blur(19px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 52px 26px rgba(255, 255, 255, 0.26);
+  background: #ffffff60;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   position: relative;
   overflow: hidden;
 }
@@ -44,12 +35,12 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(
+  /* background: linear-gradient(
     90deg,
     transparent,
     rgba(255, 255, 255, 0.8),
     transparent
-  );
+  ); */
 }
 
 .glass-card::after {
@@ -59,10 +50,59 @@
   left: 0;
   width: 1px;
   height: 100%;
-  background: linear-gradient(
+  /* background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.8),
     transparent,
     rgba(255, 255, 255, 0.3)
-  );
+  ); */
+}
+/* src/main.css */
+
+.notch-top-roundness {
+  position: relative;
+  overflow: hidden; /* Crucial for masking/clipping */
+  /* Ensure your div's background is applied (e.g., bg-[#ffffff80] from Tailwind) */
+}
+
+.notch-top-roundness::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 48px; /* 2 * radius (24px) */
+  height: 48px; /* 2 * radius (24px) */
+  background-color: transparent; /* No background needed if mask is doing the work */
+
+  /* Ensure both prefixed and unprefixed versions are present */
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, transparent 24px, black 24px);
+  mask-image: radial-gradient(circle at 0% 0%, transparent 24px, black 24px);
+
+  /* Set mask-mode for explicit behavior */
+  -webkit-mask-mode: alpha; /* For WebKit browsers */
+  mask-mode: alpha; /* Standard */
+
+  pointer-events: none; /* Prevents blocking clicks on the div content */
+  z-index: 1; /* Ensure it's above other potential layers if needed */
+}
+
+.notch-top-roundness::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px; /* 2 * radius (24px) */
+  height: 48px; /* 2 * radius (24px) */
+  background-color: transparent; /* No background needed if mask is doing the work */
+
+  /* Ensure both prefixed and unprefixed versions are present */
+  -webkit-mask-image: radial-gradient(circle at 100% 0%, transparent 24px, black 24px);
+  mask-image: radial-gradient(circle at 100% 0%, transparent 24px, black 24px);
+
+  /* Set mask-mode for explicit behavior */
+  -webkit-mask-mode: alpha; /* For WebKit browsers */
+  mask-mode: alpha; /* Standard */
+
+  pointer-events: none;
+  z-index: 1;
 }
