@@ -24,14 +24,14 @@ const ToolCard = memo(({ tool, onClick, isSelected }: { tool: Tool; onClick: (to
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white/80 rounded-2xl p-3 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing transform transition-all duration-100 ease-out
-        ${isSelected ? 'border-2 border-purple-500 shadow-md' : 'border border-gray-200'}
+      className={`bg-white/10 backdrop-blur-sm rounded-2xl p-3 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing transform transition-all duration-100 ease-out border border-white/20
+        ${isSelected ? 'border-2 border-white/50 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : ''}
        `}
       onClick={handleClick}
       ref={cardRef}
     >
       <tool.icon size={26} color={tool.color} />
-      <span className="text-sm font-medium mt-2 text-center text-gray-700">
+      <span className="text-sm font-medium mt-2 text-center text-white">
         {tool.label}
       </span>
     </motion.div>
@@ -77,7 +77,7 @@ export default memo(function ToolBoard({
 
   return (
     <motion.div
-      className={`glass-card p-5 flex flex-col rounded-2xl  min-w-[400px] min-h-[150px]
+      className={`glass-border relative rounded-2xl bg-white/10 backdrop-blur-md border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] text-white p-5 flex flex-col min-w-[400px] min-h-[150px]
         ${isDragging ? 'z-50' : 'z-30'} `} // Bring dragged item to front with z-50
       style={{
         position: 'absolute', // Important: Position ToolBoard absolutely within the pan-zoom layer
@@ -89,7 +89,7 @@ export default memo(function ToolBoard({
       // Attach the handleMouseDown from useDraggable to make this div draggable
       onMouseDown={handleMouseDown}
     >
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">{heading}</h3>
+      <h3 className="text-xl font-semibold mb-4 text-white">{heading}</h3>
       <div className="grid grid-cols-2 gap-4">
         <AnimatePresence>
           {visibleTools.map(tool => (

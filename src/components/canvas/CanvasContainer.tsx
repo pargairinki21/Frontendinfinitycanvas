@@ -5,14 +5,17 @@ import ChatPanel from '../chat/ChatPanel';
 import ToolBoard from './ToolBoard';
 import Folder from './Folder'; // Assuming Folder exists and is used elsewhere
 import { TopBar } from './ui/TopBar';
-import { BottomBar } from './ui/BottomBar';
+// import { BottomBar } from './ui/BottomBar';
 import { Notch } from './ui/Notch';
 import { FlyingIconAnimation } from './ui/FlyingIconAnimation';
 import { FlyingCardAnimation } from './ui/FlyingCardAnimation';
+import { Logo } from './ui/Logo';
 import { usePanZoom } from './hooks/usePanZoom';
 import { useToolInteractions } from './hooks/useToolInteractions';
 import { ALL_TOOLS } from '../shared/constants'; // Import ALL_TOOLS as it contains tool info
 import { ChatMessage, Tool } from '../shared/types'; // Import types
+import NeuralWebCanvas from '../three/NeuralWebCanvas';
+import { Toolbar } from '../tools/Toolbar';
 
 // Define initial positions for ToolBoards as a constant
 const INITIAL_TOOLBOARD_POSITIONS = {
@@ -111,14 +114,14 @@ export default function CanvasContainer() {
         background: 'none',
       }}
     >
-      {/* Background Image and Overlay (no change) */}
-      <img
-        src="https://images.pexels.com/photos/17485657/pexels-photo-17485657.png"
-        alt="Nature background"
-        className="absolute inset-0 w-full h-full object-cover -z-20 select-none pointer-events-none"
-        draggable={false}
-      />
-      <div className="absolute inset-0 bg-black/40 -z-10 pointer-events-none select-none" />
+      {/* Neural Web Background */}
+      <div className="absolute inset-0 -z-20 select-none pointer-events-none">
+        <NeuralWebCanvas />
+      </div>
+      <div className="absolute inset-0 bg-black/20 -z-10 pointer-events-none select-none" />
+
+      {/* Logo - Top Left Corner */}
+      <Logo />
 
       {/* Notch (Top Bar) - Add onMouseDown to stop propagation */}
       <Notch
@@ -152,8 +155,8 @@ export default function CanvasContainer() {
       />
 
       {/* Bottom Bar - Add onMouseDown to stop propagation */}
-      <div className="pointer-events-auto" onMouseDown={stopPropagation}>
-        <BottomBar
+      {/* <div className="pointer-events-auto" onMouseDown={stopPropagation}> */}
+        {/* <BottomBar
           onAskSubmit={handleAskSomething}
           askInputValue={askInput}
           onAskInputChange={setAskInput}
@@ -165,8 +168,8 @@ export default function CanvasContainer() {
           onResetCanvas={combinedReset}
           isPanMode={isPanMode}
           onTogglePanMode={() => setIsPanMode(v => !v)}
-        />
-      </div>
+        /> */}
+      {/* </div> */}
       {/* PANNABLE CANVAS LAYER - (no change here, individual ToolBoards handle their own drag stop) */}
       <div
         className="absolute left-1/2 top-1/2 origin-center"
@@ -182,15 +185,22 @@ export default function CanvasContainer() {
       </div>
 
       {/* ChatPanel - Add onMouseDown to the inner pointer-events-auto div to stop propagation */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-8">
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-24">
         <div className="pointer-events-auto" ref={chatRef} onMouseDown={stopPropagation}> {/* <--- Add this */}
           <ChatPanel
-            hideInput
             shadowColor={shadowColor}
             messages={chatMessages}
             typing={chatTyping}
             selectedTool={selectedTool}
+            onAskSubmit={handleAskSomething}
           />
+        </div>
+      </div>
+
+      {/* Toolbar - Positioned below the chat panel with more gap */}
+      <div className="fixed bottom-12 left-1/2 transform -translate-x-1/2 pointer-events-none z-40">
+        <div className="pointer-events-auto" onMouseDown={stopPropagation}>
+          <Toolbar />
         </div>
       </div>
     </div>

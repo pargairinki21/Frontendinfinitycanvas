@@ -13,6 +13,7 @@ type ChatPanelProps = {
   messages?: ChatMessage[]; // Controlled messages
   typing?: boolean; // Controlled typing indicator
   onSendMessage?: (message: string) => void; // Callback for sending messages
+  onAskSubmit?: (input: string) => void; // Add Ask Something functionality
 };
 
 // --- Sub-components for better modularity ---
@@ -24,8 +25,10 @@ const ChatMessageBubble = memo(({ message }: { message: ChatMessage }) => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
     transition={{ duration: 0.3 }}
-    className={`max-w-[80%] px-4 py-2 rounded-xl whitespace-pre-wrap ${
-      message.sender === 'user' ? 'bg-[#d1f0e4] self-end ml-auto' : 'bg-[#f3f3f3] self-start mr-auto'
+    className={`max-w-[80%] px-4 py-2 rounded-xl whitespace-pre-wrap text-white ${
+      message.sender === 'user' 
+        ? 'bg-white/20 self-end ml-auto' 
+        : 'bg-white/10 self-start mr-auto'
     }`}
   >
     {message.text}
@@ -39,12 +42,12 @@ const TypingIndicator = memo(() => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="max-w-[80%] px-4 py-2 rounded-xl bg-[#f3f3f3] self-start mr-auto"
+    className="max-w-[80%] px-4 py-2 rounded-xl bg-white/10 self-start mr-auto"
   >
     <div className="flex gap-1">
-      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce" />
-      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-150" />
-      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce delay-300" />
+      <div className="w-2.5 h-2.5 bg-white/70 rounded-full animate-bounce" />
+      <div className="w-2.5 h-2.5 bg-white/70 rounded-full animate-bounce delay-150" />
+      <div className="w-2.5 h-2.5 bg-white/70 rounded-full animate-bounce delay-300" />
     </div>
   </motion.div>
 ));
@@ -55,12 +58,17 @@ type ChatInputProps = {
   onChange: (value: string) => void;
   onSend: () => void;
   selectedTool?: ChatPanelProps['selectedTool'];
+  onAskSubmit?: (input: string) => void; // Add this prop for Ask Something functionality
 };
 
-const ChatInput = memo(({ value, onChange, onSend, selectedTool }: ChatInputProps) => {
+const ChatInput = memo(({ value, onChange, onSend, selectedTool, onAskSubmit }: ChatInputProps) => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSend();
+    if (onAskSubmit) {
+      onAskSubmit(value); // Use Ask Something functionality if available
+    } else {
+      onSend(); // Fallback to original functionality
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -72,14 +80,68 @@ const ChatInput = memo(({ value, onChange, onSend, selectedTool }: ChatInputProp
 
   return (
     <form
-      className="border-t p-4 bg-white/60 backdrop-blur flex items-center gap-3"
+      className="p-6 flex flex-col items-center gap-4"
       onSubmit={handleSubmit}
     >
-      <div className="flex items-center bg-white/80 border border-gray-200 rounded-full px-3 py-2 shadow w-[260px]">
+      {/* NEW PROFESSIONAL DESIGN */}
+      {/* Professional Input Container */}
+      <div className="relative w-full max-w-md">
+        {/* Enhanced Input Box */}
+        <div className="relative flex items-center bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl px-4 py-3 shadow-[0_8px_32px_rgba(255,255,255,0.1)] hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)] transition-all duration-300 group">
+          {/* Left Icon */}
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 mr-3">
+            <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          
+          {/* Input Field */}
+          <input
+            type="text"
+            className="flex-1 bg-transparent outline-none text-base text-white placeholder-white/40 font-medium"
+            placeholder="Ask Something..."
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          
+          {/* Send Button */}
+          <button 
+            type="submit" 
+            className="ml-3 bg-gradient-to-r from-purple-500/80 to-blue-500/80 hover:from-purple-500 to-blue-500 text-white rounded-xl p-2.5 transition-all duration-300 transform hover:scale-105 hover:shadow-lg group-hover:shadow-purple-500/25"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21l16.5-9-16.5-9v7.5l11.25 1.5-11.25 1.5V21z" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Subtle Glow Effect */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+      </div>
+      
+      {/* Selected Tool Indicator - REMOVED */}
+      {/* {selectedTool && (
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-lg">
+          <selectedTool.icon color={selectedTool.color} size={20} />
+          <span className="text-sm font-medium">{selectedTool.label}</span>
+        </div>
+      )} */}
+
+      {/* OLD SIMPLE DESIGN - COMMENTED OUT */}
+      {/* 
+      <div className="flex items-center w-[320px] max-w-full px-4 py-2 rounded-full border border-gray-300 shadow bg-white focus:outline-none focus:ring-2 focus:ring-purple-400">
         <input
           type="text"
-          className="flex-1 bg-transparent outline-none px-2 py-1 text-base"
-          placeholder="Type…"
+          className="flex-1 bg-transparent outline-none text-base"
+          placeholder="Ask Something..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -91,7 +153,7 @@ const ChatInput = memo(({ value, onChange, onSend, selectedTool }: ChatInputProp
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-6 h-6"
+            className="w-5 h-5"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21l16.5-9-16.5-9v7.5l11.25 1.5-11.25 1.5V21z" />
           </svg>
@@ -101,10 +163,10 @@ const ChatInput = memo(({ value, onChange, onSend, selectedTool }: ChatInputProp
         {selectedTool && (
           <span className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/70 border border-gray-300 shadow text-base">
             <selectedTool.icon color={selectedTool.color} size={22} />
-            {/* Removed label as per previous instructions for CanvasContainer; if needed, add it back */}
           </span>
         )}
       </div>
+      */}
     </form>
   );
 });
@@ -119,6 +181,7 @@ export default function ChatPanel({
   messages: messagesProp, // Renamed to avoid conflict with internal state
   typing: typingProp,     // Renamed to avoid conflict with internal state
   onSendMessage,          // New prop for sending messages
+  onAskSubmit,            // Add Ask Something functionality
 }: ChatPanelProps) {
   // Internal state for messages and typing if not controlled by props
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([
@@ -141,9 +204,14 @@ export default function ChatPanel({
   const handleSend = () => {
     if (!input.trim()) return;
 
-    // If onSendMessage prop is provided, use it for controlled behavior
-    if (onSendMessage) {
+    // If onAskSubmit prop is provided, use Ask Something functionality
+    if (onAskSubmit) {
+      onAskSubmit(input);
+      setInput(''); // Clear input after submission
+    } else if (onSendMessage) {
+      // If onSendMessage prop is provided, use it for controlled behavior
       onSendMessage(input);
+      setInput('');
     } else {
       // Otherwise, manage internal state
       setInternalMessages((m) => [...m, { id: Date.now(), sender: 'user', text: input }]);
@@ -152,8 +220,8 @@ export default function ChatPanel({
         setInternalMessages((m) => [...m, { id: Date.now() + 1, sender: 'assistant', text: 'That sounds interesting. Tell me more.' }]);
         setInternalTyping(false);
       }, 1500);
+      setInput('');
     }
-    setInput('');
   };
 
   // Helper to render message list using the ChatMessageBubble and TypingIndicator components
@@ -168,7 +236,7 @@ export default function ChatPanel({
 
   return (
     <div
-      className="glass-card flex flex-col overflow-hidden rounded-2xl relative min-w-[40rem] min-h-[26rem]"
+      className="glass-border relative w-96 h-[28rem] rounded-2xl bg-white/10 backdrop-blur-md border border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] text-white p-4 flex flex-col min-w-[40rem] min-h-[26rem]"
       style={{
         // boxShadow: shadowColor ? `0 8px 32px 0 ${shadowColor}99` : 'none',
       }}
@@ -195,8 +263,10 @@ export default function ChatPanel({
           onChange={setInput}
           onSend={handleSend}
           selectedTool={selectedTool}
+          onAskSubmit={onAskSubmit}
         />
       )}
+
     </div>
   );
 }
