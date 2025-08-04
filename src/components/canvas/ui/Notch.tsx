@@ -25,7 +25,7 @@ export function Notch({
   const isActive = notchTools.length > 0;
 
   const notchVariants = {
-    peeking: { y: '-30%', opacity: 1 },
+    peeking: { y: '-20%', opacity: 0.8 },
     fullyVisible: { y: '0%', opacity: 1 },
   };
 
@@ -48,7 +48,7 @@ export function Notch({
 
   return (
     <div
-      className="fixed top-0 left-1/2 -translate-x-1/2 z-40 w-max pointer-events-none"
+      className="fixed top-0 left-1/2 -translate-x-1/2 z-50 w-max pointer-events-none"
       onMouseDown={onMouseDown}
     >
       <motion.div
@@ -59,6 +59,7 @@ export function Notch({
         variants={notchVariants}
         initial="peeking"
         animate={isActive ? 'fullyVisible' : 'peeking'}
+        style={{ display: 'block' }}
         transition={notchTransition}
       >
         <div className="flex space-x-2 p-2">

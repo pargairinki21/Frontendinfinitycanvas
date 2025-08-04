@@ -17,6 +17,10 @@ import { ChatMessage, Tool } from '../shared/types'; // Import types
 import NeuralWebCanvas from '../three/NeuralWebCanvas';
 import { Toolbar } from '../tools/Toolbar';
 
+import DynamicChatWrapper from '../chat/DynamicChatWrapper';
+import { useDynamicChat } from '../chat/hooks/useDynamicChat';
+import ChatModeToggle from '../chat/ChatModeToggle';
+
 // Define initial positions for ToolBoards as a constant
 const INITIAL_TOOLBOARD_POSITIONS = {
   catoids: { x: -900, y: -200 },
@@ -28,6 +32,10 @@ const INITIAL_TOOLBOARD_POSITIONS = {
 export default function CanvasContainer() {
   const chatRef = useRef<HTMLDivElement>(null);
   const notchRef = useRef<HTMLDivElement>(null);
+
+  // ORIGINAL CODE - COMMENTED OUT FOR REFERENCE
+  // Dynamic chat functionality
+  // const { mode: chatMode, toggleMode: toggleChatMode } = useDynamicChat('canvas-layer');
 
   const {
     pos: canvasPanPos,
@@ -123,15 +131,15 @@ export default function CanvasContainer() {
       {/* Logo - Top Left Corner */}
       <Logo />
 
-      {/* Notch (Top Bar) - Add onMouseDown to stop propagation */}
-      <Notch
-        notchRef={notchRef}
-        notchTools={notchTools}
-        selectedTool={selectedTool} // <--- Pass this
-        onSelectTool={handleSelectNotchTool}
-        onRemoveTool={handleRemoveNotchTool}
-        onMouseDown={stopPropagation} // <--- Pass the stopPropagation handler
-      />
+             {/* Notch (Top Bar) - Let it handle its own positioning */}
+       <Notch
+         notchRef={notchRef}
+         notchTools={notchTools}
+         selectedTool={selectedTool}
+         onSelectTool={handleSelectNotchTool}
+         onRemoveTool={handleRemoveNotchTool}
+         onMouseDown={stopPropagation}
+       />
       {/* Flying Animations (no change needed here as they are temporary/non-interactive) */}
       <FlyingIconAnimation
         flyingIcon={flyingIcon}
@@ -182,20 +190,64 @@ export default function CanvasContainer() {
         <ToolBoard {...getToolBoardProps("SOP Section", "sopSection")} />
         <ToolBoard {...getToolBoardProps("Information Retrival", "informationRetrieval")} />
         <ToolBoard {...getToolBoardProps("Performance", "performance")} />
-      </div>
+        
+                 {/* ChatPanel - Now scales and moves with the canvas */}
+         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+           <div className="pointer-events-auto" ref={chatRef} onMouseDown={stopPropagation}>
+             <ChatPanel
+               shadowColor={shadowColor}
+               messages={chatMessages}
+               typing={chatTyping}
+               selectedTool={selectedTool}
+               onAskSubmit={handleAskSomething}
+             />
+           </div>
+         </div>
 
-      {/* ChatPanel - Add onMouseDown to the inner pointer-events-auto div to stop propagation */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 mb-24">
-        <div className="pointer-events-auto" ref={chatRef} onMouseDown={stopPropagation}> {/* <--- Add this */}
-          <ChatPanel
-            shadowColor={shadowColor}
-            messages={chatMessages}
-            typing={chatTyping}
-            selectedTool={selectedTool}
-            onAskSubmit={handleAskSomething}
-          />
-        </div>
-      </div>
+         {/* ORIGINAL CODE - COMMENTED OUT FOR REFERENCE */}
+         {/* Dynamic ChatPanel - Can be positioned in different modes */}
+         {/* {chatMode === 'canvas-layer' && (
+           <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+             <div className="pointer-events-auto" ref={chatRef} onMouseDown={stopPropagation}>
+               <ChatPanel
+                 shadowColor={shadowColor}
+                 messages={chatMessages}
+                 typing={chatTyping}
+                 selectedTool={selectedTool}
+                 onAskSubmit={handleAskSomething}
+               />
+             </div>
+           </div>
+         )} */}
+       </div>
+
+       {/* ORIGINAL CODE - COMMENTED OUT FOR REFERENCE */}
+       {/* Dynamic ChatPanel - Static and Dynamic modes */}
+       {/* {(chatMode === 'static' || chatMode === 'dynamic') && (
+         <DynamicChatWrapper
+           mode={chatMode}
+           canvasPanPos={canvasPanPos}
+           canvasScale={canvasScale}
+           onMouseDown={stopPropagation}
+           shadowColor={shadowColor}
+           messages={chatMessages}
+           typing={chatTyping}
+           selectedTool={selectedTool}
+           onAskSubmit={handleAskSomething}
+         />
+       )} */}
+
+       {/* ORIGINAL CODE - COMMENTED OUT FOR REFERENCE */}
+       {/* Chat Mode Toggle - Positioned in top right */}
+       {/* <div className="fixed top-4 right-4 pointer-events-none z-50">
+         <div className="pointer-events-auto">
+           <ChatModeToggle
+             currentMode={chatMode}
+             onModeChange={toggleChatMode}
+             className="bg-black/20 backdrop-blur-md rounded-xl p-4 border border-white/20"
+           />
+         </div>
+       </div> */}
 
       {/* Toolbar - Positioned below the chat panel with more gap */}
       <div className="fixed bottom-12 left-1/2 transform -translate-x-1/2 pointer-events-none z-40">
