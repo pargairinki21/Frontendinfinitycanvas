@@ -12,7 +12,7 @@ const Login = ({ onLogin }) => {
     >
       {/* Figma-style background images */}
       {/* Bottom left large orange circle */}
-      <img src="/Group 1.png" alt="bg-circle" className="absolute left-[-80px] bottom-[-80px] z-0" style={{ width: 240, height: 240 }} />
+      {/* <img src="/Group 1.png" alt="bg-circle" className="absolute left-[-80px] bottom-[-80px] z-0" style={{ width: 240, height: 240 }} /> */}
       {/* Right-side ellipses as a separate component */}
       <EllipseCurveRight />
       {/* Welcome text above card */}
@@ -53,9 +53,17 @@ const Login = ({ onLogin }) => {
         <div
           className="flex flex-col items-center justify-center w-full h-full shadow-2xl border bg-white/10 backdrop-blur-[12.5px]"
           style={{
-            borderRadius: 40,
+            borderRadius: 60,
             background: 'rgba(255,255,255,0.01)',
-            boxShadow: '0 39px 56px -36px rgba(255,255,255,0.50) inset, 0 7px 11px -4px #FFFFFF',
+            boxShadow: `
+              0 39px 56px -36px rgba(255, 255, 255, 0.50) inset,
+              0 7px 11px -4px #FFF inset,
+              0 -82px 68px -64px rgba(14, 78, 114, 0.30) inset,
+              0 98px 100px -48px rgba(0, 161, 253, 0.30) inset,
+              0 4px 18px 0 rgba(8, 59, 88, 0.30) inset,
+              0 1px 40px 0 rgba(13, 137, 207, 0.20) inset
+            `,
+            backdropFilter: 'blur(12.5px)',
             border: '1.5px solid #EDEBF0',
           }}
         >

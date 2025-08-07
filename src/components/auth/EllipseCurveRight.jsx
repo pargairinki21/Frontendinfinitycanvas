@@ -41,6 +41,26 @@ const ellipses = [
     width: 90,
     height: 100,
   },
+  {
+    src: '/Group 1.png',
+    alt: 'group1-circle',
+    // adjust as per design
+    top: 170,    // adjust as needed
+    width: 90,
+    right: 400,
+    height: 90,
+    rotate: -45,
+  },
+  {
+    src: '/Group 1.png',
+    alt: 'group1-circle',
+    // adjust as per design
+    top: 470,    // adjust as needed
+    width: 120,
+    right: 860,
+    height: 120,
+    rotate: -45,
+  },
 ];
 
 const EllipseCurveRight = () => (
