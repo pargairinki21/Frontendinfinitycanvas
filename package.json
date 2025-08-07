@@ -19,6 +19,7 @@
     "react-data-grid": "^7.0.0-canary.43",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
+    "react-router-dom": "^7.7.1",
     "react-simple-keyboard": "^3.8.95",
     "tailwind-rounded-out": "^2.0.0",
     "three": "^0.178.0"
