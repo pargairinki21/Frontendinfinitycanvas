@@ -69,7 +69,7 @@ extend({ LineShaderMaterial })
 const CONFIG = {
   count: 60,
   connectionDistance: 0.6,
-  nodeSize: 0.3,
+  nodeSize: 0.01,
   nodeColor: '#E6DDFC',    // White nodes
   lineColor: '#91C8E4',    // Blue lines
   background: '#33048E',   // Deep purple background
@@ -148,6 +148,8 @@ const NeuralWeb = () => {
       geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(), 3))
       lineRef.current.geometry = geometry
     }
+    
+    // Ensure color attribute is properly set up for nodes
     if (nodesRef.current?.geometry) {
       nodesRef.current.geometry.setAttribute('color', new THREE.BufferAttribute(colors.current, 3))
     }
@@ -177,10 +179,21 @@ const NeuralWeb = () => {
       positions.current[idx + 2] += dz * force
     }
 
-    if (nodesRef.current?.geometry) {
-      nodesRef.current.geometry.attributes.position.array = positions.current
+    // Update geometry attributes safely
+    if (nodesRef.current?.geometry?.attributes?.position?.array) {
+      const positionArray = nodesRef.current.geometry.attributes.position.array
+      for (let i = 0; i < positions.current.length; i++) {
+        positionArray[i] = positions.current[i]
+      }
       nodesRef.current.geometry.attributes.position.needsUpdate = true
-      nodesRef.current.geometry.attributes.color.array = colors.current
+    }
+    
+    // Ensure colors are always updated
+    if (nodesRef.current?.geometry?.attributes?.color?.array) {
+      const colorArray = nodesRef.current.geometry.attributes.color.array
+      for (let i = 0; i < colors.current.length; i++) {
+        colorArray[i] = colors.current[i]
+      }
       nodesRef.current.geometry.attributes.color.needsUpdate = true
     }
 

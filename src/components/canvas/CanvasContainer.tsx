@@ -2,6 +2,7 @@
 /* eslint-disable react/prop-types */
 import React, { useRef, useState, useCallback, useMemo } from 'react';
 import ChatPanel from '../chat/ChatPanel';
+import OutputChatPanel from '../chat/OutputChatPanel';
 import ToolBoard from './ToolBoard';
 import Folder from './Folder'; // Assuming Folder exists and is used elsewhere
 import { TopBar } from './ui/TopBar';
@@ -32,6 +33,9 @@ const INITIAL_TOOLBOARD_POSITIONS = {
 export default function CanvasContainer() {
   const chatRef = useRef<HTMLDivElement>(null);
   const notchRef = useRef<HTMLDivElement>(null);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
+  const [backendMessage, setBackendMessage] = useState<string | null>(null);
+
 
   // ORIGINAL CODE - COMMENTED OUT FOR REFERENCE
   // Dynamic chat functionality
@@ -53,6 +57,11 @@ export default function CanvasContainer() {
     { id: 1, sender: 'assistant', text: 'Hi there! How can I help you today?' },
   ]);
   const [chatTyping, setChatTyping] = useState<boolean>(false);
+  
+  // New state for OutputChatPanel
+  const [showOutputPanel, setShowOutputPanel] = useState<boolean>(false);
+  const [outputMessages, setOutputMessages] = useState<ChatMessage[]>([]);
+  const [outputTyping, setOutputTyping] = useState<boolean>(false);
 
   const {
     notchTools,
@@ -69,7 +78,7 @@ export default function CanvasContainer() {
     handleAskSomething,
     handleNodeDragStart,
     resetCanvas: resetToolInteractionsState,
-  } = useToolInteractions(chatRef, setChatMessages, setChatTyping, []);
+  } = useToolInteractions(chatRef, setChatMessages, setChatTyping, [], setShowOutputPanel, setOutputMessages, setOutputTyping, setCurrentPdfUrl, setBackendMessage);
 
   const [toolBoardPositions, setToolBoardPositions] = useState<{ [key: string]: { x: number; y: number } }>(
     INITIAL_TOOLBOARD_POSITIONS
@@ -112,6 +121,15 @@ export default function CanvasContainer() {
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
+
+  const userMessages = chatMessages.filter(msg => msg.role === "user");
+  const botMessages = outputMessages.filter(msg => msg.role === "assistant");
+
+
+
+
+
+
 
   return (
     <div
@@ -191,7 +209,7 @@ export default function CanvasContainer() {
         <ToolBoard {...getToolBoardProps("Information Retrival", "informationRetrieval")} />
         <ToolBoard {...getToolBoardProps("Performance", "performance")} />
         
-                 {/* ChatPanel - Now scales and moves with the canvas */}
+                 {/* ChatPanel - Now scales and moves with the canvas
          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
            <div className="pointer-events-auto" ref={chatRef} onMouseDown={stopPropagation}>
              <ChatPanel
@@ -203,6 +221,72 @@ export default function CanvasContainer() {
              />
            </div>
          </div>
+
+         {/* OutputChatPanel - Positioned to the right of ChatPanel */}
+         {/* <div className="absolute left-1/2 top-1/2 transform translate-x-2 -translate-y-1/2 pointer-events-none">
+           <div className="pointer-events-auto" onMouseDown={stopPropagation}>
+             <OutputChatPanel
+               shadowColor={shadowColor}
+               messages={outputMessages}
+               typing={outputTyping}
+               selectedTool={selectedTool}
+               isVisible={showOutputPanel}
+               onClose={() => setShowOutputPanel(false)}
+             />
+           </div>
+         </div>  */}
+
+
+
+
+
+
+
+        {/* Chat + Output Panel Wrapper */}
+      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div
+           className="flex gap-4 pointer-events-auto"
+          ref={chatRef}
+           onMouseDown={stopPropagation}
+  >
+    {/* Main Chat Panel */}
+    <ChatPanel
+      shadowColor={shadowColor}
+      messages={userMessages}
+      typing={chatTyping}
+      selectedTool={selectedTool}
+      onAskSubmit={handleAskSomething}
+    />
+
+    {/* Output Panel (only if visible) */}
+    {showOutputPanel && (
+      <OutputChatPanel
+        shadowColor={shadowColor}
+        messages={botMessages}
+        typing={outputTyping}
+        selectedTool={selectedTool}
+        isVisible={showOutputPanel}
+        pdfUrl={currentPdfUrl}
+        backendMessage={backendMessage}
+        onClose={() => setShowOutputPanel(false)}
+      />
+        )}
+     </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
          {/* ORIGINAL CODE - COMMENTED OUT FOR REFERENCE */}
          {/* Dynamic ChatPanel - Can be positioned in different modes */}
@@ -258,3 +342,12 @@ export default function CanvasContainer() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
