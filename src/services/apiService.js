@@ -1,12 +1,14 @@
 import axios from 'axios';
 
-// Backend URL - user's peripheral API is running on http://127.0.0.1:8002
+// Backend URL - Live deployment
 const FORM_API_URLS = [
-  'http://127.0.0.1:8001',
+  'https://infinitycanvasmainbackend.onrender.com',
+  'http://127.0.0.1:8001', // Fallback for local development
   'http://localhost:8001',
 ];
 const PERIPHERAL_API_URLS = [
-  'http://127.0.0.1:8002',
+  'https://infinitycanvasmainbackend.onrender.com', // Use same backend for peripheral APIs
+  'http://127.0.0.1:8002', // Fallback for local development
   'http://localhost:8002',
 ];
  // Default to http://127.0.0.1:8002
@@ -406,7 +408,7 @@ export const searchForms = async (query) => {
   try {
     console.log(`🔍 Searching forms with query: "${query}"`);
     
-    const response = await axios.get(`http://127.0.0.1:8001/forms/search?query=${encodeURIComponent(query)}`, {
+    const response = await axios.get(`${FORM_API_URLS[0]}/forms/search?query=${encodeURIComponent(query)}`, {
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
